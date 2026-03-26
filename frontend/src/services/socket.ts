@@ -25,6 +25,7 @@ class Socket {
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 5,
       transports: ['websocket', 'polling'],
+      autoConnect: false, // Don't auto-connect, let us call connect()
     });
 
     // Set up standard event listeners

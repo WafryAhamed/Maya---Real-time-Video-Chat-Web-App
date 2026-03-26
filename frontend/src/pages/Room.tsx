@@ -172,10 +172,66 @@ export function Room({ roomId, onLeave }: RoomProps) {
       };
       setTypingUsers((prev) => prev.filter((t) => t.userId !== uid));
     };
+    const handleUserJoined = (data: unknown) => {
+      const userData = data as { user: Participant };
+      console.log('[Room] User joined:', userData.user.name);
+      // Backend will emit room-users with updated list
+    };
+    const handleUserLeft = (data: unknown) => {
+      const { userId } = data as { userId: string };
+      console.log('[Room] User left:', userId);
+      // Backend will emit room-users with updated list
+    };
+    const handleRoomUsers = (data: unknown) => {
+      const { users } = data as { users: Participant[] };
+      console.log('[Room] Received room users:', users.length);
+      // Update participants via the video grid
+    };
+    const handleHandRaise = (data: unknown) => {
+      const { userId, isHandRaised } = data as { userId: string; isHandRaised: boolean };
+      console.log(`[Room] ${userId} hand raise: ${isHandRaised}`);
+    };
+    const handleToggleAudio = (data: unknown) => {
+      const { userId, isMuted } = data as { userId: string; isMuted: boolean };
+      console.log(`[Room] ${userId} audio toggle: ${isMuted}`);
+    };
+    const handleToggleVideo = (data: unknown) => {
+      const { userId, isCameraOff } = data as { userId: string; isCameraOff: boolean };
+      console.log(`[Room] ${userId} video toggle: ${isCameraOff}`);
+    };
     on('chat-message', handleChatMessage);
     on('system-message', handleSystemMessage);
     on('typing-start', handleTypingStart);
     on('typing-stop', handleTypingStop);
+    on('user-joined', handleUserJoined);
+    on('user-left', handleUserLeft);
+    on('room-users', handleRoomUsers);
+    on('hand-raise', handleHandRaise);
+    on('toggle-audio', handleToggleAudio);
+    on('toggle-video', handleToggleVideo);
+    
+    // WebRTC signaling handlers
+    const handleOffer = (data: unknown) => {
+      const offer = data as { from: string; to: string; offer: RTCSessionDescriptionInit };
+      console.log(`[Room] Received offer from ${offer.from}`);
+      // TODO: Handle WebRTC offer
+    };
+    
+    const handleAnswer = (data: unknown) => {
+      const answer = data as { from: string; to: string; answer: RTCSessionDescriptionInit };
+      console.log(`[Room] Received answer from ${answer.from}`);
+      // TODO: Handle WebRTC answer
+    };
+    
+    const handleIceCandidate = (data: unknown) => {
+      const candidate = data as { from: string; to: string; candidate: RTCIceCandidate };
+      console.log(`[Room] Received ICE candidate from ${candidate.from}`);
+      // TODO: Handle ICE candidate
+    };
+    
+    on('offer', handleOffer);
+    on('answer', handleAnswer);
+    on('ice-candidate', handleIceCandidate);
   }, [on, sidebarOpen, sidebarTab]);
   // Clear unread when opening chat tab
   useEffect(() => {

@@ -359,12 +359,12 @@ export function initializeSocketHandlers(io: Server): void {
     // ========================================
     // Hand Raise
     // ========================================
-    socket.on('hand-raised', (data: any) => {
+    socket.on('hand-raise', (data: any) => {
       try {
         const roomId = socket.roomId;
         if (!roomId) return;
 
-        io.to(roomId).emit('hand-raised', {
+        io.to(roomId).emit('hand-raise', {
           userId: socket.userId,
           isHandRaised: data.isHandRaised,
         });
@@ -373,7 +373,7 @@ export function initializeSocketHandlers(io: Server): void {
           `Hand raise event from ${socket.userName}: ${data.isHandRaised}`
         );
       } catch (error) {
-        logger.error('Error in hand-raised handler:', error);
+        logger.error('Error in hand-raise handler:', error);
       }
     });
 
