@@ -19,7 +19,7 @@ export async function connectDatabase(): Promise<void> {
     logger.info('✓ MongoDB connected successfully');
   } catch (error) {
     logger.error('✗ MongoDB connection failed:', error);
-    process.exit(1);
+    throw error; // Re-throw to allow server to handle gracefully
   }
 }
 

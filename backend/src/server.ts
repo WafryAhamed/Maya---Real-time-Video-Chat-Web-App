@@ -43,8 +43,14 @@ attachSocketIO(io);
 
 async function startServer(): Promise<void> {
   try {
-    // Initialize database
-    await initializeDatabase();
+    // Initialize database (non-blocking - continue if fails)
+    try {
+      await initializeDatabase();
+      logger.info('✓ Database connected successfully');
+    } catch (dbError) {
+      logger.warn('⚠️  Database connection failed - running in stateless mode');
+      logger.warn('Note: Data persistence features will not be available');
+    }
 
     // Start cleanup scheduler
     startCleanupScheduler();
