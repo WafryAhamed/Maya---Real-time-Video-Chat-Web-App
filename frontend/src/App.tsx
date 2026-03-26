@@ -4,6 +4,7 @@ import React, { useCallback, useState } from 'react';
 // ============================================
 // Simple client-side routing between Home and Room pages.
 import { SocketProvider } from './context/SocketContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Home } from './pages/Home';
 import { Room } from './pages/Room';
 type AppView = 'home' | 'room';
@@ -19,11 +20,13 @@ export function App() {
     setView('home');
   }, []);
   return (
-    <SocketProvider>
-      <div className="h-screen w-full overflow-hidden">
-        {view === 'home' && <Home onJoinRoom={handleJoinRoom} />}
-        {view === 'room' && <Room roomId={roomId} onLeave={handleLeaveRoom} />}
-      </div>
-    </SocketProvider>);
+    <ErrorBoundary>
+      <SocketProvider>
+        <div className="h-screen w-full overflow-hidden">
+          {view === 'home' && <Home onJoinRoom={handleJoinRoom} />}
+          {view === 'room' && <Room roomId={roomId} onLeave={handleLeaveRoom} />}
+        </div>
+      </SocketProvider>
+    </ErrorBoundary>);
 
 }

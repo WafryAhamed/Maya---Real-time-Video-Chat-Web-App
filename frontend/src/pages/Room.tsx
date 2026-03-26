@@ -21,6 +21,7 @@ import { SettingsDialog } from '../components/SettingsDialog';
 import { InviteDialog } from '../components/InviteDialog';
 import { MeetingReactions } from '../components/MeetingReactions';
 import { QuickPoll, CreatePollDialog } from '../components/QuickPoll';
+import { PermissionsDialog } from '../components/PermissionsDialog';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useSocket } from '../hooks/useSocket';
 import { useActiveSpeaker } from '../hooks/useActiveSpeaker';
@@ -135,6 +136,7 @@ export function Room({ roomId, onLeave }: RoomProps) {
   // Join room via socket
   useEffect(() => {
     if (isConnected && !isLoading) {
+      console.log('[Room] Joining room:', roomId);
       emit('join-room', {
         roomId,
         user: {
@@ -233,6 +235,13 @@ export function Room({ roomId, onLeave }: RoomProps) {
     on('answer', handleAnswer);
     on('ice-candidate', handleIceCandidate);
   }, [on, sidebarOpen, sidebarTab]);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      console.log('[Room] Component unmounting, cleaning up resources');
+      cleanup();
+    };
+  }, [cleanup]);
   // Clear unread when opening chat tab
   useEffect(() => {
     if (sidebarOpen && sidebarTab === 'chat') setUnreadMessages(0);
@@ -263,11 +272,13 @@ export function Room({ roomId, onLeave }: RoomProps) {
   );
   // Leave call
   const handleLeave = useCallback(() => {
+    console.log('[Room] User leaving room:', roomId);
     cleanup();
     emit('leave-room', {
       roomId,
       userId
     });
+    console.log('[Room] Leave signal sent, closing room...');
     onLeave();
   }, [cleanup, emit, roomId, userId, onLeave]);
   // Copy room ID
@@ -384,6 +395,26 @@ export function Room({ roomId, onLeave }: RoomProps) {
     );
   }, []);
   const handlePinUser = useCallback((_uid: string) => {}, []);
+  
+  // Handle permission requests for camera/microphone
+  const handleRequestPermissions = useCallback(
+    async (constraints: MediaStreamConstraints) => {
+      try {
+        // Request permissions using getUserMedia
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        // Stop the stream since we're just requesting permissions
+        stream.getTracks().forEach(track => track.stop());
+        // Now initialize the actual media
+        initializeMedia();
+      } catch (err) {
+        const error = err as DOMException;
+        console.error('[Room] Permission request failed:', error);
+        throw error;
+      }
+    },
+    [initializeMedia]
+  );
+
   const participantCount = useMemo(
     () => 1 + remoteStreams.length,
     [remoteStreams.length]
@@ -491,6 +522,11 @@ export function Room({ roomId, onLeave }: RoomProps) {
             </span>
           </div>
         }
+
+        {/* Permissions dialog for camera/microphone access */}
+        <div className="px-4 py-3 bg-maya-primary/5 border-b border-maya-primary/10">
+          <PermissionsDialog onRequestPermissions={handleRequestPermissions} />
+        </div>
 
         {/* Main content area */}
         <div className="flex-1 flex overflow-hidden relative">

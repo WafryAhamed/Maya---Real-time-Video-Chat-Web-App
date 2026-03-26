@@ -37,12 +37,19 @@ export function SocketProvider({ children }: SocketProviderProps) {
     });
     socket.on('disconnect', () => {
       setIsConnected(false);
+      console.log('[SocketContext] Socket disconnected - attempting to reconnect...');
     });
     socket.on('error', (data: unknown) => {
       const errorData = data as {
         message: string;
       };
       setConnectionError(errorData.message);
+      console.error('[SocketContext] Socket error:', errorData.message);
+    });
+    socket.on('connect_error', (err: unknown) => {
+      const error = err as { message: string };
+      console.error('[SocketContext] Connection error:', error.message);
+      setConnectionError(`Connection failed: ${error.message}`);
     });
     // Initiate connection
     socket.connect();
