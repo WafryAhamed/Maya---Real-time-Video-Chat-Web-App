@@ -23,7 +23,7 @@ class Socket {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: Infinity, // Infinite reconnection attempts
       transports: ['websocket', 'polling'],
       autoConnect: false, // Don't auto-connect, let us call connect()
     });
@@ -45,6 +45,19 @@ class Socket {
 
     this.client.on('connect_error', (err: unknown) => {
       console.error('[Socket] Connection error:', err);
+    });
+
+    // Add reconnection event listeners
+    this.client.on('reconnect_attempt', () => {
+      console.warn('[Socket] Attempting to reconnect...');
+    });
+
+    this.client.on('reconnect', () => {
+      console.log('[Socket] Successfully reconnected after disconnection');
+    });
+
+    this.client.on('reconnect_failed', () => {
+      console.error('[Socket] Failed to reconnect - max attempts reached');
     });
   }
 

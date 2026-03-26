@@ -31,29 +31,36 @@ export function SocketProvider({ children }: SocketProviderProps) {
     // Create and connect socket
     const socket = createSocket();
     socketRef.current = socket;
+    
     socket.on('connect', () => {
       setIsConnected(true);
       setConnectionError(null);
+      console.log('[SocketContext] Socket connected successfully');
     });
+    
     socket.on('disconnect', () => {
       setIsConnected(false);
       console.log('[SocketContext] Socket disconnected - attempting to reconnect...');
     });
+    
     socket.on('error', (data: unknown) => {
-      const errorData = data as {
-        message: string;
-      };
+      const errorData = data as { message: string };
       setConnectionError(errorData.message);
       console.error('[SocketContext] Socket error:', errorData.message);
     });
+    
     socket.on('connect_error', (err: unknown) => {
       const error = err as { message: string };
       console.error('[SocketContext] Connection error:', error.message);
       setConnectionError(`Connection failed: ${error.message}`);
     });
+    
     // Initiate connection
+    console.log('[SocketContext] Initiating socket connection...');
     socket.connect();
+    
     return () => {
+      console.log('[SocketContext] Cleaning up socket connection');
       socket.disconnect();
       socket.removeAllListeners();
       socketRef.current = null;
