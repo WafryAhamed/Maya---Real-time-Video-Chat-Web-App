@@ -4,12 +4,12 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useSocketContext } from '../context/SocketContext';
-import type { MockSocket } from '../services/socket';
+import type { Socket } from '../services/socket';
 
 type EventCallback = (...args: unknown[]) => void;
 
 interface UseSocketReturn {
-  socket: MockSocket | null;
+  socket: Socket | null;
   isConnected: boolean;
   connectionError: string | null;
   emit: (event: string, data?: unknown) => void;

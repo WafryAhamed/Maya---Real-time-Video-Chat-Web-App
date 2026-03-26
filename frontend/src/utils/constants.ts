@@ -4,8 +4,8 @@
 
 import type { MockDevice, UserPreferences } from '../types';
 
-/** Socket server URL (mock — no real server needed) */
-export const SOCKET_SERVER_URL = 'http://localhost:3001';
+/** Socket server URL */
+export const SOCKET_SERVER_URL = 'http://localhost:5000';
 
 /** WebRTC ICE server configuration */
 export const ICE_SERVERS: RTCConfiguration = {

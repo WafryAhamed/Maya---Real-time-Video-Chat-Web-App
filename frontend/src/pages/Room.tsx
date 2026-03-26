@@ -201,7 +201,7 @@ export function Room({ roomId, onLeave }: RoomProps) {
         timestamp: Date.now()
       };
       setMessages((prev) => [...prev, message]);
-      emit('chat-message', message);
+      emit('chat-message', { content });
     },
     [userId, userName, emit]
   );
@@ -227,7 +227,7 @@ export function Room({ roomId, onLeave }: RoomProps) {
   // Toggle hand raise
   const handleToggleHand = useCallback(() => {
     setIsHandRaised((prev) => !prev);
-    emit('hand-raised', {
+    emit('hand-raise', {
       userId,
       isHandRaised: !isHandRaised
     });

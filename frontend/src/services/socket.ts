@@ -1,115 +1,122 @@
 // ============================================
-// Maya — Mock Socket.IO Service
+// Maya — Real Socket.IO Client Service
 // ============================================
-// Minimal Mock Socket.IO-like client for development.
+// Connects to the real backend Socket.IO server.
 
+import { io, Socket as SocketIOClient } from 'socket.io-client';
 import type { TypingUser } from '../types';
+
+// Backend server URL
+const BACKEND_URL = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:5000';
 
 type EventCallback = (...args: unknown[]) => void;
 
-/** Generate a random ID */
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 12);
-}
-
 /**
- * MockSocket — Simulates Socket.IO client behavior for development.
+ * Socket — Real Socket.IO client wrapper
  */
-class MockSocket {
-  private listeners: Map<string, Set<EventCallback>> = new Map();
+class Socket {
+  private client: SocketIOClient;
   private _connected: boolean = false;
-  private _id: string = generateId();
+
+  constructor(url: string) {
+    this.client = io(url, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+      transports: ['websocket', 'polling'],
+    });
+
+    // Set up standard event listeners
+    this.client.on('connect', () => {
+      this._connected = true;
+      console.log('[Socket] Connected to backend');
+    });
+
+    this.client.on('disconnect', () => {
+      this._connected = false;
+      console.log('[Socket] Disconnected from backend');
+    });
+
+    this.client.on('error', (err: unknown) => {
+      console.error('[Socket] Error:', err);
+    });
+
+    this.client.on('connect_error', (err: unknown) => {
+      console.error('[Socket] Connection error:', err);
+    });
+  }
 
   get connected(): boolean {
     return this._connected;
   }
 
   get id(): string {
-    return this._id;
+    return this.client.id || '';
   }
 
   /** Register an event listener */
-  on(event: string, callback: EventCallback): MockSocket {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
-    }
-    this.listeners.get(event)!.add(callback);
+  on(event: string, callback: EventCallback): Socket {
+    this.client.on(event, callback);
     return this;
   }
 
   /** Remove an event listener */
-  off(event: string, callback?: EventCallback): MockSocket {
+  off(event: string, callback?: EventCallback): Socket {
     if (callback) {
-      this.listeners.get(event)?.delete(callback);
+      this.client.off(event, callback);
     } else {
-      this.listeners.delete(event);
+      this.client.off(event);
     }
     return this;
   }
 
-  /** Emit an event (triggers local listeners) */
-  emit(event: string, ...args: unknown[]): MockSocket {
-    setTimeout(() => {
-      this.triggerEvent(event, ...args);
-    }, 50);
+  /** Emit an event to the server */
+  emit(event: string, ...args: unknown[]): Socket {
+    this.client.emit(event, ...args);
     return this;
   }
 
-  /** Connect to mock server */
-  connect(): MockSocket {
-    setTimeout(() => {
-      this._connected = true;
-      this.triggerEvent('connect');
-    }, 100);
+  /** Connect to server */
+  connect(): Socket {
+    if (!this._connected) {
+      this.client.connect();
+    }
     return this;
   }
 
-  /** Disconnect from mock server */
-  disconnect(): MockSocket {
+  /** Disconnect from server */
+  disconnect(): Socket {
+    this.client.disconnect();
     this._connected = false;
-    this.triggerEvent('disconnect');
     return this;
-  }
-
-  /** Trigger event on all registered listeners */
-  private triggerEvent(event: string, ...args: unknown[]): void {
-    const callbacks = this.listeners.get(event);
-    if (callbacks) {
-      callbacks.forEach((cb) => {
-        try {
-          cb(...args);
-        } catch (err) {
-          console.error(`[MockSocket] Error in ${event} handler:`, err);
-        }
-      });
-    }
   }
 
   /** Clean up all listeners */
   removeAllListeners(): void {
-    this.listeners.clear();
+    this.client.removeAllListeners();
   }
 }
 
-/** Singleton mock socket instance */
-let socketInstance: MockSocket | null = null;
+/** Singleton socket instance */
+let socketInstance: Socket | null = null;
 
-/** Get or create the mock socket instance */
-export function getSocket(): MockSocket {
+/** Get or create the socket instance */
+export function getSocket(): Socket {
   if (!socketInstance) {
-    socketInstance = new MockSocket();
+    socketInstance = new Socket(BACKEND_URL);
   }
   return socketInstance;
 }
 
 /** Create a fresh socket connection */
-export function createSocket(): MockSocket {
+export function createSocket(): Socket {
   if (socketInstance) {
     socketInstance.disconnect();
     socketInstance.removeAllListeners();
   }
-  socketInstance = new MockSocket();
+  socketInstance = new Socket(BACKEND_URL);
   return socketInstance;
 }
 
-export type { MockSocket };
+export type { Socket };

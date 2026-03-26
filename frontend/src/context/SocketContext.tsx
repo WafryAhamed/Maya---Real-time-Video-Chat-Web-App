@@ -9,9 +9,9 @@ import React, {
 // Maya — Socket Context Provider
 // ============================================
 
-import { createSocket, type MockSocket } from '../services/socket';
+import { createSocket, type Socket } from '../services/socket';
 interface SocketContextValue {
-  socket: MockSocket | null;
+  socket: Socket | null;
   isConnected: boolean;
   connectionError: string | null;
 }
@@ -24,7 +24,7 @@ interface SocketProviderProps {
   children: React.ReactNode;
 }
 export function SocketProvider({ children }: SocketProviderProps) {
-  const socketRef = useRef<MockSocket | null>(null);
+  const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   useEffect(() => {
